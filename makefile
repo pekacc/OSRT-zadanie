@@ -6,7 +6,7 @@ DEPS = statistic.h
 	$(CC) -c -o $@ &< $(CFLAGS)
 
 program: main.c statistic.c
-	$(CC) main.c statistic.c -o main $(CFLAGS)
+	$(CC) main.c functions.c statistic.c -o main $(CFLAGS)
 
 clean:
 	rm main

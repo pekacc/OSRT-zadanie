@@ -7,3 +7,6 @@
 #include <arpa/inet.h> 
 #include <unistd.h>
 #include <string.h> 
+
+
+#define RECEIVE_BUF 100
