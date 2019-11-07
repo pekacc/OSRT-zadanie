@@ -1,1 +1,2 @@
 # OSRT-zadanie
+Git test
