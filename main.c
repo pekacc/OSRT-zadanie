@@ -2,6 +2,6 @@
 #include "statistic.h"
 
 int main() {
-	hello();
+    hello();
 }
 
