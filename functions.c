@@ -89,3 +89,19 @@ char *receive_string (int sock_desc) {
     //return s;
     
 }
+int send_int(int sock_desc, int i) {
+    int k = send(sock_desc,&i,sizeof(int),0);
+    if(k != sizeof(int) || k <= 0) {
+        printf("Chyba pri posielani!\n");
+    }
+    return k;
+}
+
+int receive_int(int sock_desc) {
+    int i;
+    int k = recv(sock_desc,&i,sizeof(int),0);
+    if(k <= 0) { //bad received format
+        return -1;
+    }
+    return i;
+}

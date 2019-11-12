@@ -26,9 +26,8 @@ client.o:
 	@echo "compiling client"
 	$(CC) -c client.c $(CFLAGS)
 
+
 clean:
 	rm server
 	rm client
-	rm functions.o
-	rm server.o
-	rm statistic.o
+	rm *.o
