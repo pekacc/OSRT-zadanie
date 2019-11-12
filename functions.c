@@ -105,3 +105,19 @@ int receive_int(int sock_desc) {
     }
     return i;
 }
+
+int new_socket(int *port) {
+    int sock_desc;
+    int try_port = MIN_PORT_NUMBER;
+    do {
+        sock_desc = open_socket(try_port);
+        if(sock_desc <= 0) {
+            #ifdef DEBUG
+            printf("Cannot open socket on port %d, trying another\n", try_port);
+            #endif
+            try_port++;
+        }
+    } while(sock_desc <= 0);
+    (*port) = try_port;
+    return sock_desc;
+} 

@@ -5,3 +5,4 @@ char * receive_string (int sock_desc);
 int listen_socket(int sock_desc);
 int send_int(int, int);
 int receive_int(int);
+int new_socket(int *);
