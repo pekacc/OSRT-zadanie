@@ -5,24 +5,30 @@ DEPS = statistic.h
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ &< $(CFLAGS)
 
-program: main.o statistic.o functions.o
+program: server.o statistic.o functions.o client.o
 	@echo "linking"
-	$(CC) main.o functions.o statistic.o -o main $(CFLAGS)
+	$(CC) server.o functions.o statistic.o -o server $(CFLAGS)
+	$(CC) client.o functions.o statistic.o -o client $(CFLAGS)
 
-main.o: 
-	@echo "compiling main"
-	gcc -c main.c $(CFLAGS)
+server.o: 
+	@echo "compiling server"
+	$(CC) -c server.c $(CFLAGS)
 
 functions.o:
 	@echo "compiling functions"
-	gcc -c functions.c $(CFLAGS)
+	$(CC) -c functions.c $(CFLAGS)
 
 statistic.o:
 	@echo "compiling statistic"
-	gcc -c statistic.c $(CFLAGS)
+	$(CC) -c statistic.c $(CFLAGS)
+
+client.o:
+	@echo "compiling client"
+	$(CC) -c client.c $(CFLAGS)
 
 clean:
-	rm main
+	rm server
+	rm client
 	rm functions.o
-	rm main.o
+	rm server.o
 	rm statistic.o

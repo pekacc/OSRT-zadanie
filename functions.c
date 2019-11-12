@@ -23,7 +23,10 @@ int open_socket(int port) {
         close(sock_desc);  
         return -1;
     }
-    	
+    return sock_desc;
+}
+
+int listen_socket(int sock_desc) {
     if (listen(sock_desc, 20) != 0) {
         printf("cannot listen on socket!\n");
         close(sock_desc);  
@@ -40,6 +43,7 @@ int open_socket(int port) {
         return -1;
     }
     return temp_sock_desc;
+
 }
 
 int connect_socket(int port) {
