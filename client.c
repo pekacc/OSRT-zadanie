@@ -9,7 +9,7 @@ int main() {
     int action = getpid();
     int k = send_int(sock_desc,action);
     #ifdef DEBUG
-    printf("Odosielatel: Poslal som %d\nPocet odoslanych bitov je %d\n",action, k);
+    printf("Sent: %d\nBytes sent: je %d\n",action, k);
     #endif
     if(action == 0) {
         printf("Exiting connection");
@@ -18,7 +18,9 @@ int main() {
     }
 
     action = receive_int(sock_desc);
-    printf("Received %d\n", action);
+    #ifdef DEBUG
+    printf("New port is: %d\n", action);
+    #endif
     close(sock_desc);
     sleep(1);
     printf("Connecting to new socket\n");

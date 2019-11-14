@@ -43,6 +43,7 @@ int main() {
         printf("New port is: %d\n",port);
         connections[actual_connection].port = port;
         send_int(act_sock_desc, port);
+        close(act_sock_desc);
 
         int pid;
         if((pid = fork()) == 0) {
@@ -64,7 +65,7 @@ void processing(int my_socket) { //function to fulfill client tasks
     int action;
     while(1) {
         action = receive_int(act_sock_desc); 
-        printf("Dostal som %d\n, posielam %d\n",action,action*action);
+        printf("Dostal som %d\nPosielam %d\n",action,action*action);
         action *= action;
         send_int(act_sock_desc, action);
     }
