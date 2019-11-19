@@ -2,8 +2,18 @@
 #include "statistic.h"
 #include "functions.h"
 
+void sigquit();
+
+int sock_desc;
+
 int main() {
-    int sock_desc = connect_socket(61000);
+    signal(SIGQUIT, sigquit);
+    sock_desc = connect_socket(61000);
+    if(sock_desc < 0) {
+        printf("Cannot connect to server!\n");
+        close(sock_desc);
+        exit(-1);
+    }
     printf("Zadajte cislo\n");
 
     int action = getpid();
@@ -34,3 +44,13 @@ int main() {
         sleep(1);
     }
 }
+
+void sigquit() {
+    signal(SIGQUIT, sigquit);
+    #ifdef DEBUG
+    printf("Hang up from server side\n");
+    #endif
+    close(sock_desc);
+    exit(0);
+}
+
