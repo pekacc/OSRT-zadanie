@@ -18,6 +18,11 @@
 #define MAX_RECORDS 1000
 #define DEBUG
 
+//macros for client tasks
+#define ADD_RECORD 1
+#define REMOVE_RECORD 2
+#define SHOW_RECORD 3
+
 typedef struct connections {
     int port;
     int pid_server;
@@ -25,7 +30,7 @@ typedef struct connections {
 } CONNECTIONS;
 
 typedef struct record {
-    char name[300];
+    int ID;
     int age;
     int salary;
 } RECORD;

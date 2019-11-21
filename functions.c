@@ -74,25 +74,26 @@ int connect_socket(int port) {
 int send_string(int sock_desc, char *s) {
     int k = send(sock_desc,s,strlen(s),0);
     if(k != strlen(s) || k < 0) {
-        printf("Chyba pri posielani!\n");
+        printf("Sending error!\n");
     }
     return k;
 }
 
-char *receive_string (int sock_desc) {
-    char *s[RECEIVE_BUF]; 
-    int k = recv(sock_desc,s,RECEIVE_BUF,0);
-    if(k < 0) {
-        printf("Chyba pri posielani!\n");
-    }
+int receive_string (int sock_desc, char *s) {
+    int k = 0;
+        k = recv(sock_desc,s,RECEIVE_BUF-1,0); //RECEIVE_BUF -1 due to \0 
+        if(k <= 0) {
+            printf("Receiving error! k = %d\n", k);
+            return -1;
+        }
     s[k] = '\0';
-    //return s;
+    return k;
     
 }
 int send_int(int sock_desc, int i) {
     int k = send(sock_desc,&i,sizeof(int),0);
     if(k != sizeof(int) || k <= 0) {
-        printf("Chyba pri posielani!\n");
+        printf("Sending error!\n");
     }
     return k;
 }
@@ -101,6 +102,7 @@ int receive_int(int sock_desc) {
     int i;
     int k = recv(sock_desc,&i,sizeof(int),0);
     if(k <= 0) { //bad received format
+        printf("Receiving error! k = %d\n", k);
         return -1;
     }
     return i;
@@ -121,3 +123,18 @@ int new_socket(int *port) {
     (*port) = try_port;
     return sock_desc;
 } 
+
+RECORD *create_shm(int pid) { //creating shared memory
+    int shmid;
+    RECORD *shm;
+    if ((shmid = shmget(pid, (MAX_RECORDS)*sizeof(RECORD), IPC_CREAT | 0666)) < 0) {
+        printf("Error in creating shared memory\n");
+        return((RECORD *)-1);
+    }   
+
+    if((shm = shmat(shmid, NULL, 0)) == (RECORD *) -1) {
+        printf("Error in creating shared memory\n");
+        return((RECORD *)-1);
+    }   
+    return shm;
+}

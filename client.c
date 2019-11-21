@@ -1,13 +1,13 @@
 #include "header.h"
-#include "statistic.h"
 #include "functions.h"
+#include "requests.h"
 
-void sigquit();
+void sighup();
 
 int sock_desc;
 
 int main() {
-    signal(SIGQUIT, sigquit);
+    signal(SIGHUP, sighup);
     sock_desc = connect_socket(61000);
     if(sock_desc < 0) {
         printf("Cannot connect to server!\n");
@@ -35,22 +35,27 @@ int main() {
     sleep(1);
     printf("Connecting to new socket\n");
     sock_desc = connect_socket(action);
+    printf("Insert command\n");
     while(1) {
-        int a = 5;
-        printf("Posielam %d\n",a);
-        send_int(sock_desc,a);
-        a = receive_int(sock_desc);
-        printf("Dostal som %d\n",a);
-        sleep(1);
+        int ID,command, age, salary;
+        scanf("%d", &command);
+        printf("Sending command no.: %d\n", command);
+        send_int(sock_desc, command);
+        switch (command) {
+            case ADD_RECORD:
+                printf("Sending record\n");
+                add_record(sock_desc, 98556, 30, 500);
+        }
+        command = receive_int(sock_desc);
+        printf("Dostal som %d\n", command);
     }
 }
 
-void sigquit() {
-    signal(SIGQUIT, sigquit);
+void sighup() {
+    signal(SIGHUP, sighup);
     #ifdef DEBUG
     printf("Hang up from server side\n");
     #endif
     close(sock_desc);
     exit(0);
 }
-

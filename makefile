@@ -5,10 +5,12 @@ DEPS = statistic.h
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ &< $(CFLAGS)
 
-program: server.o statistic.o functions.o client.o
+program: server.o statistic.o functions.o client.o requests.o
 	@echo "linking"
 	$(CC) server.o functions.o statistic.o -o server $(CFLAGS)
-	$(CC) client.o functions.o statistic.o -o client $(CFLAGS)
+	$(CC) client.o functions.o statistic.o requests.o -o client $(CFLAGS)
+	@echo "removing object files"
+	rm *.o
 
 server.o: 
 	@echo "compiling server"
@@ -25,6 +27,10 @@ statistic.o:
 client.o:
 	@echo "compiling client"
 	$(CC) -c client.c $(CFLAGS)
+
+requests.o:
+	echo "compiling requests"
+	$(CC) -c requests.c $(CFLAGS)
 
 
 clean:

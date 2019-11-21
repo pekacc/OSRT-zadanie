@@ -6,7 +6,7 @@ void sigint();
 void sigint_cli();
 void processing(int);
 int sock_desc, act_sock_desc, connections_number, shmid, records_number;
-RECORD *shm;
+RECORD *records;
 CONNECTIONS connections[MAX_CONNECTIONS];
 
 int main() {
@@ -15,12 +15,12 @@ int main() {
     records_number = 0;
 
     //creating shared memory
-    if ((shmid = shmget(getpid(), MAX_RECORDS*sizeof(RECORD), IPC_CREAT | 0666)) < 0) {
+    if ((shmid = shmget(getpid(), (MAX_RECORDS)*sizeof(RECORD), IPC_CREAT | 0666)) < 0) {
         printf("Error in creating shared memory\n");
         exit(-1);
     }
 
-    if((shm = shmat(shmid, NULL, 0)) == (RECORD *) -1) {
+    if((records = shmat(shmid, NULL, 0)) == (RECORD *) -1) {
         printf("Error in creating shared memory\n");
         exit(-1);
     }
@@ -32,9 +32,9 @@ int main() {
         exit(-1);
     }
     char buf[100];
-        #ifdef DEBUG
-        printf("Server is up\n");
-        #endif
+    #ifdef DEBUG
+    printf("Server is up\n");
+    #endif
     while(1) {
         act_sock_desc = listen_socket(sock_desc);
         int actual_connection = connections_number;
@@ -83,19 +83,32 @@ void processing(int my_socket) { //function to fulfill client tasks
     act_sock_desc = listen_socket(sock_desc);
     int action;
     while(1) {
-        action = receive_int(act_sock_desc); 
-        //printf("Dostal som %d\nPosielam %d\n",action,action*action);
-        action *= action;
-        send_int(act_sock_desc, action);
+        action = receive_int(act_sock_desc); //type of task from client
+        #ifdef DEBUG
+        printf("Received %d\n", action);
+        #endif
+        switch(action) {
+        case ADD_RECORD:
+            records[records_number].ID = receive_int(act_sock_desc);
+            records[records_number].age = receive_int(act_sock_desc);
+            records[records_number].salary = receive_int(act_sock_desc);
+
+            printf("New record is: ID: %d, age: %d, salary: %d\n",records[records_number].ID, records[records_number].age, records[records_number].salary);
+
+            records_number++;
+            send_int(act_sock_desc, action);
+            break;
+
+        }
     }
 }
 
 void sigint() {
     signal(SIGINT,sigint); //reset signal    
     for(int i = 0; i < connections_number; i++) {
-        kill(SIGQUIT,connections[i].pid_client);
+        kill(SIGHUP,connections[i].pid_client);
         kill(SIGINT,connections[i].pid_server);
-        //printf("QUIT %d\n", connections[i].pid_client);
+        printf("QUIT %d\n", connections[i].pid_client);
     }
     #ifdef DEBUG
     printf("\nClosing main socket! + %d kid processes\n", connections_number);
