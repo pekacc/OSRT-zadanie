@@ -20,8 +20,7 @@
 
 //macros for client tasks
 #define ADD_RECORD 1
-#define REMOVE_RECORD 2
-#define SHOW_RECORD 3
+#define SHOW_ALL 2
 
 typedef struct connections {
     int port;

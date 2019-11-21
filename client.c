@@ -8,46 +8,46 @@ int sock_desc;
 
 int main() {
     signal(SIGHUP, sighup);
-    sock_desc = connect_socket(61000);
+    sock_desc = connect_socket(61000); //connecting to main server
     if(sock_desc < 0) {
         printf("Cannot connect to server!\n");
         close(sock_desc);
         exit(-1);
     }
-    printf("Zadajte cislo\n");
 
-    int action = getpid();
-    int k = send_int(sock_desc,action);
+    send_int(sock_desc, getpid()); //sending PID to server
     #ifdef DEBUG
-    printf("Sent: %d\nBytes sent: je %d\n",action, k);
+    printf("My PID is: %d\n", getpid());
     #endif
-    if(action == 0) {
-        printf("Exiting connection");
-        close(sock_desc);
-        exit(-1);
-    }
 
-    action = receive_int(sock_desc);
+    int action = receive_int(sock_desc); //receiving new port
     #ifdef DEBUG
     printf("New port is: %d\n", action);
     #endif
     close(sock_desc);
-    sleep(1);
+    sleep(1); //waiting for server fork
     printf("Connecting to new socket\n");
     sock_desc = connect_socket(action);
-    printf("Insert command\n");
+
     while(1) {
+        printf("\nInsert command\n");
         int ID,command, age, salary;
         scanf("%d", &command);
-        printf("Sending command no.: %d\n", command);
+        printf("\nSending command no.: %d\n", command);
         send_int(sock_desc, command);
         switch (command) {
             case ADD_RECORD:
                 printf("Sending record\n");
                 add_record(sock_desc, 98556, 30, 500);
+            break;
+
+            case SHOW_ALL:
+                printf("Showing all records on server:\n");
+                show_all(sock_desc);
         }
         command = receive_int(sock_desc);
-        printf("Dostal som %d\n", command);
+        printf("received %d\n", command);
+        if (command == -1) sighup();
     }
 }
 

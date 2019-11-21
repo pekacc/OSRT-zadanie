@@ -15,7 +15,7 @@ int main() {
     records_number = 0;
 
     //creating shared memory
-    if ((shmid = shmget(getpid(), (MAX_RECORDS)*sizeof(RECORD), IPC_CREAT | 0666)) < 0) {
+    if ((shmid = shmget(getpid(), (MAX_RECORDS + 1)*sizeof(RECORD), IPC_CREAT | 0666)) < 0) {
         printf("Error in creating shared memory\n");
         exit(-1);
     }
@@ -24,6 +24,7 @@ int main() {
         printf("Error in creating shared memory\n");
         exit(-1);
     }
+    records[MAX_RECORDS].ID = 0;
 
     //creating socket
     sock_desc = open_socket(61000);
@@ -87,19 +88,47 @@ void processing(int my_socket) { //function to fulfill client tasks
         #ifdef DEBUG
         printf("Received %d\n", action);
         #endif
+        records_number = records[MAX_RECORDS].ID;
         switch(action) {
         case ADD_RECORD:
             records[records_number].ID = receive_int(act_sock_desc);
             records[records_number].age = receive_int(act_sock_desc);
             records[records_number].salary = receive_int(act_sock_desc);
 
-            printf("New record is: ID: %d, age: %d, salary: %d\n",records[records_number].ID, records[records_number].age, records[records_number].salary);
+            
+            if(records[records_number].ID >= 0 && records[records_number].age >= 0 && records[records_number].salary >= 0) {
+                printf("New record is: ID: %d, age: %d, salary: %d\n",records[records_number].ID, records[records_number].age, records[records_number].salary);
+                records_number++;
+                send_int(act_sock_desc, 1);
+            } else {
+                send_int(act_sock_desc, 0);
+            }
+        break;
 
-            records_number++;
-            send_int(act_sock_desc, action);
-            break;
+        case SHOW_ALL:
+            send_int(act_sock_desc, records_number);
+            for(int i = 0; i < records_number; i++) {
+                send_int(act_sock_desc, records[i].ID);
+                send_int(act_sock_desc, records[i].age);
+                send_int(act_sock_desc, records[i].salary);
+            }
+            send_int(act_sock_desc,1);
+
+        break;
+
+        case -1: 
+            #ifdef DEBUG
+            printf("Ending connection on process no.: %d!\n",getpid());
+            #endif
+            sigint_cli();
+        break;
+
+        default:
+            send_int(act_sock_desc, 0);
+        break;
 
         }
+        records[MAX_RECORDS].ID = records_number;
     }
 }
 
