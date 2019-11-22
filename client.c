@@ -39,7 +39,6 @@ int main() {
         switch (command) {
             case ADD_RECORD:
                 printf("Sending record\n");
-                sleep(5);
                 add_record(sock_desc, 98556, 30, 500);
             break;
 

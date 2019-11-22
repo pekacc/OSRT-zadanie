@@ -6,14 +6,13 @@ void sigint();
 void sigint_cli();
 void sigusr1();
 void processing(int);
-int sock_desc, act_sock_desc, connections_number, shmid, shmid_sem, records_number;
+int sock_desc, act_sock_desc, connections_number, shmid, shmid_sem, records_number, client_action;
 sem_t *semaphore;
 RECORD *records;
 CONNECTIONS connections[MAX_CONNECTIONS];
 
 int main() {
     signal(SIGINT, sigint);
-    signal(SIGUSR1, sigusr1);
     connections_number = 0;
     records_number = 0;
 
@@ -52,10 +51,6 @@ int main() {
     printf("[OK]\n");
     printf("\033[0m");
 
-    //creating timer
-    timer_t timer;
-    timer = create_my_timer(SIGUSR1);
-    set_my_timer(timer,2,2);
  
     //creating socket
     printf("Creating socket    ");
@@ -119,12 +114,21 @@ int main() {
 
 void processing(int my_socket) { //function to fulfill client tasks
     signal(SIGINT, sigint_cli);
+    signal(SIGUSR1, sigusr1);
     sock_desc = my_socket; 
     act_sock_desc = listen_socket(sock_desc);
+    
+    //creating timer
+    timer_t timer;
+    timer = create_my_timer(SIGUSR1);
+    set_my_timer(timer,CLIENT_TIMEOUT,CLIENT_TIMEOUT);
+
     int action;
+    client_action = 0;
 
     while(1) {
         action = receive_int(act_sock_desc); //type of task from client
+        client_action = 1;
         #ifdef DEBUG
         printf("Received command %d\n%d: Waiting for semaphore\n", action, getpid());
         #endif
@@ -216,5 +220,15 @@ void sigint_cli() {
 
 void sigusr1() {
     signal(SIGUSR1, sigusr1); //reset signal
-    printf("Timer\n");
+    if(client_action) {
+        #ifdef DEBUG
+        printf("Client timeout test passed\n");
+        #endif
+        client_action = 0;
+        return;
+    } else {
+        printf("Client timeout, closing server\n");
+        send_int(act_sock_desc, -1);
+        sigint_cli();
+    }
 }
