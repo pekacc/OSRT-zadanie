@@ -3,6 +3,7 @@
 #include "requests.h"
 
 void sighup();
+void set_timer(timer_t, int, int);
 
 int sock_desc;
 
@@ -38,6 +39,7 @@ int main() {
         switch (command) {
             case ADD_RECORD:
                 printf("Sending record\n");
+                sleep(5);
                 add_record(sock_desc, 98556, 30, 500);
             break;
 
@@ -58,4 +60,13 @@ void sighup() {
     #endif
     close(sock_desc);
     exit(0);
+}
+
+void set_timer(timer_t timer, int sec, int interval) {
+    struct itimerspec my_timer;
+    my_timer.it_value.tv_sec = sec; //first signal
+    my_timer.it_value.tv_nsec = sec;
+    my_timer.it_interval.tv_sec = sec; //periodical
+    my_timer.it_interval.tv_sec = sec;
+    timer_settime(timer, CLOCK_REALTIME,&my_timer, NULL);
 }

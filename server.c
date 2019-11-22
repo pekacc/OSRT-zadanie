@@ -4,39 +4,81 @@
 
 void sigint();
 void sigint_cli();
+void sigusr1();
 void processing(int);
-int sock_desc, act_sock_desc, connections_number, shmid, records_number;
+int sock_desc, act_sock_desc, connections_number, shmid, shmid_sem, records_number;
+sem_t *semaphore;
 RECORD *records;
 CONNECTIONS connections[MAX_CONNECTIONS];
 
 int main() {
     signal(SIGINT, sigint);
+    signal(SIGUSR1, sigusr1);
     connections_number = 0;
     records_number = 0;
 
     //creating shared memory
+    printf("Creating shared memory    ");
     if ((shmid = shmget(getpid(), (MAX_RECORDS + 1)*sizeof(RECORD), IPC_CREAT | 0666)) < 0) {
         printf("Error in creating shared memory\n");
-        exit(-1);
+        sigint();
     }
+    printf("\033[1;32m");
+    printf("[OK]\n");
+    printf("\033[0m");
 
-    if((records = shmat(shmid, NULL, 0)) == (RECORD *) -1) {
-        printf("Error in creating shared memory\n");
-        exit(-1);
+    if ((records = shmat(shmid, NULL, 0)) == (RECORD *) -1) {
+        sigint();
+        printf("[ERROR]\n");
     }
     records[MAX_RECORDS].ID = 0;
 
+    //creating semaphore
+    printf("Creating semaphore    ");
+    if ((shmid_sem = shmget(getpid()+1, sizeof(sem_t), IPC_CREAT | 0666)) < 0) {
+        printf("[ERROR]\n");
+        sigint();
+    }
+
+    if ((semaphore = shmat(shmid_sem, NULL, 0)) == (sem_t *) -1) {
+        printf("[ERROR]\n");
+        sigint();
+    }
+    if ((sem_init(semaphore, 1, 1)) != 0) {
+        printf("[ERROR]\n");
+        sigint();
+    }
+    printf("\033[1;32m");
+    printf("[OK]\n");
+    printf("\033[0m");
+
+    //creating timer
+    timer_t timer;
+    timer = create_my_timer(SIGUSR1);
+    set_my_timer(timer,2,2);
+ 
     //creating socket
+    printf("Creating socket    ");
     sock_desc = open_socket(61000);
     if(sock_desc < 0) {
-        printf("Socker error!\n");
+        printf("\033[1;31m");
+        printf("[ERROR]\n");
+        printf("\033[0m");
         exit(-1);
     }
+    printf("\033[1;32m");
+    printf("[OK]\n");
+    printf("\033[0m");
+
     char buf[100];
     #ifdef DEBUG
-    printf("Server is up\n");
+    printf("Server is up!\n");
     #endif
     while(1) {
+        #ifdef DEBUG
+        printf("Waiting for connection\n");
+        #endif
+
         act_sock_desc = listen_socket(sock_desc);
         int actual_connection = connections_number;
         connections_number++;
@@ -71,9 +113,6 @@ int main() {
             connections[actual_connection].pid_server = pid;
         }
     
-        #ifdef DEBUG
-        printf("Waiting for another connection\n");
-        #endif
     }
     close(sock_desc);
 }
@@ -83,10 +122,15 @@ void processing(int my_socket) { //function to fulfill client tasks
     sock_desc = my_socket; 
     act_sock_desc = listen_socket(sock_desc);
     int action;
+
     while(1) {
         action = receive_int(act_sock_desc); //type of task from client
         #ifdef DEBUG
-        printf("Received %d\n", action);
+        printf("Received command %d\n%d: Waiting for semaphore\n", action, getpid());
+        #endif
+        sem_wait(semaphore); //waiting to work with shared memory
+        #ifdef DEBUG
+        printf("%d: Semaphore passed\n", getpid());
         #endif
         records_number = records[MAX_RECORDS].ID;
         switch(action) {
@@ -116,7 +160,7 @@ void processing(int my_socket) { //function to fulfill client tasks
 
         break;
 
-        case -1: 
+        case END_CONNECTION: 
             #ifdef DEBUG
             printf("Ending connection on process no.: %d!\n",getpid());
             #endif
@@ -129,6 +173,10 @@ void processing(int my_socket) { //function to fulfill client tasks
 
         }
         records[MAX_RECORDS].ID = records_number;
+        sem_post(semaphore);
+        #ifdef DEBUG
+        printf("%d: Semaphore is free\n", getpid());
+        #endif
     }
 }
 
@@ -148,6 +196,11 @@ void sigint() {
     printf("Destroying shared memory\n");
     #endif
     shmctl(shmid,IPC_RMID,0);
+    #ifdef DEBUG
+    printf("Destroying semaphore\n");
+    #endif
+    sem_destroy(semaphore);
+    shmctl(shmid_sem,IPC_RMID,0);
     exit(0);
 }
 
@@ -159,4 +212,9 @@ void sigint_cli() {
     close(act_sock_desc);
     close(sock_desc);
     exit(0);
+}
+
+void sigusr1() {
+    signal(SIGUSR1, sigusr1); //reset signal
+    printf("Timer\n");
 }

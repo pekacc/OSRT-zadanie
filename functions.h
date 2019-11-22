@@ -7,3 +7,5 @@ int send_int(int, int);
 int receive_int(int);
 int new_socket(int *);
 RECORD *create_shm(int pid);
+timer_t create_my_timer(int);
+void set_my_timer(timer_t, int, int);

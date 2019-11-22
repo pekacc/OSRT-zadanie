@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -I. -lpthread
+CFLAGS = -I. -lpthread -lrt
 DEPS = statistic.h
 
 %.o: %.c $(DEPS)
@@ -34,6 +34,6 @@ requests.o:
 
 
 clean:
+	rm *.o
 	rm server
 	rm client
-	rm *.o

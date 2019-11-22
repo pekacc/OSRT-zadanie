@@ -138,3 +138,22 @@ RECORD *create_shm(int pid) { //creating shared memory
     }   
     return shm;
 }
+
+timer_t create_my_timer(int signal) {
+    struct sigevent ev;
+    ev.sigev_notify=SIGEV_SIGNAL;
+    ev.sigev_signo=signal;
+
+    timer_t my_timer;
+    timer_create(CLOCK_REALTIME, &ev, &my_timer);
+    return(my_timer);
+}
+
+void set_my_timer(timer_t my_timer, int sec, int interval) {
+    struct itimerspec tim;
+    tim.it_value.tv_sec=sec; //first start
+    tim.it_value.tv_nsec=0;
+    tim.it_interval.tv_sec=interval; //periode of start
+    tim.it_interval.tv_nsec=0;
+    timer_settime(my_timer,CLOCK_REALTIME,&tim,NULL);
+}
