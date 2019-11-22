@@ -4,12 +4,12 @@ void hello () {
 	printf("Hello world\n");
 }
 
-float mean (int size, int *num) {
-	float sum = 0;
-	for (int i = 0; i < size; i++) {
-		sum += num[i];
+int mean (RECORD *data) {
+	int sum = 0;
+	for (int i = 0; i < data[MAX_RECORDS].ID; i++) {
+		sum += data[i].salary;
 	}
-	sum /= size;
+	sum /= data[MAX_RECORDS].ID;
 	return sum;
 }
 

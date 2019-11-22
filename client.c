@@ -37,6 +37,7 @@ int main() {
         printf("\nSending command no.: %d\n", command);
         send_int(sock_desc, command);
         switch (command) {
+
             case ADD_RECORD:
                 printf("Sending record\n");
                 add_record(sock_desc, 98556, 30, 500);
@@ -45,10 +46,16 @@ int main() {
             case SHOW_ALL:
                 printf("Showing all records on server:\n");
                 show_all(sock_desc);
+            break;
+
+            case MEAN:
+                printf("Mean is: %d \n", receive_int(sock_desc));
+            break;
         }
         command = receive_int(sock_desc);
         printf("received %d\n", command);
         if (command == -1) sighup();
+        
     }
 }
 

@@ -19,7 +19,9 @@ int main() {
     //creating shared memory
     printf("Creating shared memory    ");
     if ((shmid = shmget(getpid(), (MAX_RECORDS + 1)*sizeof(RECORD), IPC_CREAT | 0666)) < 0) {
-        printf("Error in creating shared memory\n");
+        printf("\033[1;31m");
+        printf("[ERROR]\n");
+        printf("\033[0m");
         sigint();
     }
     printf("\033[1;32m");
@@ -27,24 +29,32 @@ int main() {
     printf("\033[0m");
 
     if ((records = shmat(shmid, NULL, 0)) == (RECORD *) -1) {
-        sigint();
+        printf("\033[1;31m");
         printf("[ERROR]\n");
+        printf("\033[0m");
+        sigint();
     }
     records[MAX_RECORDS].ID = 0;
 
     //creating semaphore
     printf("Creating semaphore    ");
     if ((shmid_sem = shmget(getpid()+1, sizeof(sem_t), IPC_CREAT | 0666)) < 0) {
+        printf("\033[1;31m");
         printf("[ERROR]\n");
+        printf("\033[0m");
         sigint();
     }
 
     if ((semaphore = shmat(shmid_sem, NULL, 0)) == (sem_t *) -1) {
+        printf("\033[1;31m");
         printf("[ERROR]\n");
+        printf("\033[0m");
         sigint();
     }
     if ((sem_init(semaphore, 1, 1)) != 0) {
+        printf("\033[1;31m");
         printf("[ERROR]\n");
+        printf("\033[0m");
         sigint();
     }
     printf("\033[1;32m");
@@ -64,11 +74,10 @@ int main() {
     printf("\033[1;32m");
     printf("[OK]\n");
     printf("\033[0m");
-
     char buf[100];
-    #ifdef DEBUG
-    printf("Server is up!\n");
-    #endif
+
+    printf("\033[1;32m"); printf("Server is up!\n");
+    printf("\033[0m");
     while(1) {
         #ifdef DEBUG
         printf("Waiting for connection\n");
@@ -161,7 +170,11 @@ void processing(int my_socket) { //function to fulfill client tasks
                 send_int(act_sock_desc, records[i].salary);
             }
             send_int(act_sock_desc,1);
+        break;
 
+        case MEAN:
+            send_int(act_sock_desc, mean(records));
+            send_int(act_sock_desc, 1);
         break;
 
         case END_CONNECTION: 

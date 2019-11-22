@@ -24,12 +24,13 @@
 #define MIN_PORT_NUMBER 60000 //sockets creating from this port number
 #define MAX_RECORDS 1000
 #define DEBUG
-#define CLIENT_TIMEOUT 10
+#define CLIENT_TIMEOUT 60
 
 //macros for client tasks
 #define END_CONNECTION -1
 #define ADD_RECORD 1
 #define SHOW_ALL 2
+#define MEAN 5
 
 typedef struct connections {
     int port;

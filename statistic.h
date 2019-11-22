@@ -1,3 +1,3 @@
 void hello(void);
-float mean (int size, int *num);
+int mean (RECORD *);
 int median (int size, int *num);
