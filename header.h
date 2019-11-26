@@ -34,8 +34,8 @@
 
 typedef struct connections {
     int port;
-    int pid_server;
-    int pid_client;
+    pid_t pid_server;
+    pid_t pid_client;
 } CONNECTIONS;
 
 typedef struct record {

@@ -5,6 +5,7 @@
 void sigint();
 void sigint_cli();
 void sigusr1();
+void sigchld();
 void processing(int);
 int sock_desc, act_sock_desc, connections_number, shmid, shmid_sem, records_number, client_action;
 sem_t *semaphore;
@@ -12,6 +13,7 @@ RECORD *records;
 CONNECTIONS connections[MAX_CONNECTIONS];
 
 int main() {
+    signal(SIGCHLD, sigchld);
     signal(SIGINT, sigint);
     connections_number = 0;
     records_number = 0;
@@ -69,7 +71,7 @@ int main() {
         printf("\033[1;31m");
         printf("[ERROR]\n");
         printf("\033[0m");
-        exit(-1);
+        sigint();
     }
     printf("\033[1;32m");
     printf("[OK]\n");
@@ -154,7 +156,9 @@ void processing(int my_socket) { //function to fulfill client tasks
 
             
             if(records[records_number].ID >= 0 && records[records_number].age >= 0 && records[records_number].salary >= 0) {
+                #ifdef DEBUG
                 printf("New record is: ID: %d, age: %d, salary: %d\n",records[records_number].ID, records[records_number].age, records[records_number].salary);
+                #endif
                 records_number++;
                 send_int(act_sock_desc, 1);
             } else {
@@ -178,8 +182,12 @@ void processing(int my_socket) { //function to fulfill client tasks
         break;
 
         case END_CONNECTION: 
+            sem_post(semaphore);
             #ifdef DEBUG
-            printf("Ending connection on process no.: %d!\n",getpid());
+            printf("%d: Semaphore is free\n", getpid());
+            #endif
+            #ifdef DEBUG
+            printf("Ending connection on process no.: %d!\n", getpid());
             #endif
             sigint_cli();
         break;
@@ -200,9 +208,9 @@ void processing(int my_socket) { //function to fulfill client tasks
 void sigint() {
     signal(SIGINT,sigint); //reset signal    
     for(int i = 0; i < connections_number; i++) {
-        kill(SIGHUP,connections[i].pid_client);
-        kill(SIGINT,connections[i].pid_server);
-        printf("QUIT %d\n", connections[i].pid_client);
+        kill(connections[i].pid_server, SIGINT);
+        kill(connections[i].pid_client, SIGHUP);
+        printf("SIGHUP to client with PID %d\n", connections[i].pid_client);
     }
     #ifdef DEBUG
     printf("\nClosing main socket! + %d kid processes\n", connections_number);
@@ -228,6 +236,7 @@ void sigint_cli() {
     #endif
     close(act_sock_desc);
     close(sock_desc);
+    records[MAX_RECORDS].age = getpid();
     exit(0);
 }
 
@@ -244,4 +253,15 @@ void sigusr1() {
         send_int(act_sock_desc, -1);
         sigint_cli();
     }
+}
+
+void sigchld() {
+    signal(SIGCHLD, sigchld); //reset signal
+    remove_connection(connections, connections_number, records[MAX_RECORDS].age);
+    connections_number--;
+    printf("Table of connections:\n");
+    for(int i = 0; i < connections_number; i++) {
+        printf("PID server: %d PID client: %d\n", connections[i].pid_server, connections[i].pid_client);
+    }
+    printf("\n\n\n");
 }

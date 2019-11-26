@@ -157,3 +157,16 @@ void set_my_timer(timer_t my_timer, int sec, int interval) {
     tim.it_interval.tv_nsec=0;
     timer_settime(my_timer,CLOCK_REALTIME,&tim,NULL);
 }
+
+
+void remove_connection(CONNECTIONS *connections, int connections_number, pid_t pid) {
+    int num = 0;
+    for (int i = 0; i < connections_number; i++) {
+        if(connections[i].pid_server == pid) {
+            num = i;
+        }
+    }
+    for (int i = num+1; i < connections_number; i++) {
+        connections[i-1] = connections[i];
+    }
+}

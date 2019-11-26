@@ -9,3 +9,4 @@ int new_socket(int *);
 RECORD *create_shm(int pid);
 timer_t create_my_timer(int);
 void set_my_timer(timer_t, int, int);
+void remove_connection(CONNECTIONS *connections, int connections_number, pid_t pid);
