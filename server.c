@@ -7,7 +7,9 @@ void sigint_cli();
 void sigusr1();
 void sigchld();
 void processing(int);
+void * status_thread();
 int sock_desc, act_sock_desc, connections_number, shmid, shmid_sem, records_number, client_action;
+pthread_t thread_id;
 sem_t *semaphore;
 RECORD *records;
 CONNECTIONS connections[MAX_CONNECTIONS];
@@ -18,22 +20,27 @@ int main() {
     connections_number = 0;
     records_number = 0;
 
+    //creating status thread
+    printf("Creating status thread    ");
+    if ((pthread_create(&thread_id, NULL, status_thread, NULL)) < 0) {
+        printf("\033[1;31m[ERROR]\033[0m\n");
+        sigint();
+    }
+    printf("\033[1;32m[OK]\033[0m\n");
+
+
+    //connections = malloc(sizeof(CONNECTIONS)*MAX_CONNECTIONS);
+
     //creating shared memory
     printf("Creating shared memory    ");
     if ((shmid = shmget(getpid(), (MAX_RECORDS + 1)*sizeof(RECORD), IPC_CREAT | 0666)) < 0) {
-        printf("\033[1;31m");
-        printf("[ERROR]\n");
-        printf("\033[0m");
+        printf("\033[1;31m[ERROR]\033[0m\n");
         sigint();
     }
-    printf("\033[1;32m");
-    printf("[OK]\n");
-    printf("\033[0m");
+    printf("\033[1;32m[OK]\033[0m\n");
 
     if ((records = shmat(shmid, NULL, 0)) == (RECORD *) -1) {
-        printf("\033[1;31m");
-        printf("[ERROR]\n");
-        printf("\033[0m");
+        printf("\033[1;31m[ERROR]\033[0m\n");
         sigint();
     }
     records[MAX_RECORDS].ID = 0;
@@ -41,41 +48,29 @@ int main() {
     //creating semaphore
     printf("Creating semaphore    ");
     if ((shmid_sem = shmget(getpid()+1, sizeof(sem_t), IPC_CREAT | 0666)) < 0) {
-        printf("\033[1;31m");
-        printf("[ERROR]\n");
-        printf("\033[0m");
+        printf("\033[1;31m[ERROR]\033[0m\n");
         sigint();
     }
 
     if ((semaphore = shmat(shmid_sem, NULL, 0)) == (sem_t *) -1) {
-        printf("\033[1;31m");
-        printf("[ERROR]\n");
-        printf("\033[0m");
+        printf("\033[1;31m[ERROR]\033[0m\n");
         sigint();
     }
     if ((sem_init(semaphore, 1, 1)) != 0) {
-        printf("\033[1;31m");
-        printf("[ERROR]\n");
-        printf("\033[0m");
+        printf("\033[1;31m[ERROR]\033[0m\n");
         sigint();
     }
-    printf("\033[1;32m");
-    printf("[OK]\n");
-    printf("\033[0m");
+    printf("\033[1;32m[OK]\033[0m\n");
 
  
     //creating socket
     printf("Creating socket    ");
     sock_desc = open_socket(61000);
     if(sock_desc < 0) {
-        printf("\033[1;31m");
-        printf("[ERROR]\n");
-        printf("\033[0m");
+        printf("\033[1;31m[ERROR]\033[0m\n");
         sigint();
     }
-    printf("\033[1;32m");
-    printf("[OK]\n");
-    printf("\033[0m");
+    printf("\033[1;32m[OK]\033[0m\n");
     char buf[100];
 
     printf("\033[1;32m"); printf("Server is up!\n");
@@ -212,20 +207,20 @@ void sigint() {
         kill(connections[i].pid_client, SIGHUP);
         printf("SIGHUP to client with PID %d\n", connections[i].pid_client);
     }
-    #ifdef DEBUG
-    printf("\nClosing main socket! + %d kid processes\n", connections_number);
-    #endif
+    printf("\nClosing main socket! + %d kid processes    ", connections_number);
     close(act_sock_desc);
     close(sock_desc);
-    #ifdef DEBUG
-    printf("Destroying shared memory\n");
-    #endif
+    printf("\033[1;32m[OK]\033[0m\n");
+
+    printf("Destroying shared memory    ");
     shmctl(shmid,IPC_RMID,0);
-    #ifdef DEBUG
-    printf("Destroying semaphore\n");
-    #endif
+    printf("\033[1;32m[OK]\033[0m\n");
+
+    printf("Destroying semaphore    ");
     sem_destroy(semaphore);
     shmctl(shmid_sem,IPC_RMID,0);
+    printf("\033[1;32m[OK]\033[0m\n");
+
     exit(0);
 }
 
@@ -259,9 +254,32 @@ void sigchld() {
     signal(SIGCHLD, sigchld); //reset signal
     remove_connection(connections, connections_number, records[MAX_RECORDS].age);
     connections_number--;
+    #ifdef DEBUG
     printf("Table of connections:\n");
     for(int i = 0; i < connections_number; i++) {
         printf("PID server: %d PID client: %d\n", connections[i].pid_server, connections[i].pid_client);
     }
     printf("\n\n\n");
+    #endif
+}
+
+void * status_thread() {
+    while(1) {
+        int command;
+        scanf("%d", &command);
+        switch(command) {
+            case 1:
+                printf("There are %d active connections: \n", connections_number);
+                for (int i = 0; i < connections_number; i++) {
+                    printf("Conneciton %d: server PID: %d, client PID: %d\n", i, connections[i].pid_server, connections[i].pid_client);
+                }
+            break;
+            case 2:
+                printf("There are %d records in memory:\n", records[MAX_RECORDS].ID);
+                for(int i = 0; i < records[MAX_RECORDS].ID; i++) {
+                    printf("Record no. %d: ID: %d, age: %d, salary: %d\n", i, records[i].ID, records[i].age, records[i].salary);
+                }
+            break;
+        }
+    }
 }
