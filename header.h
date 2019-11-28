@@ -28,9 +28,13 @@
 
 //macros for client tasks
 #define END_CONNECTION -1
+#define MENU 0
 #define ADD_RECORD 1
 #define SHOW_ALL 2
 #define MEAN 5
+#define CLEAR_DATABASE 9
+
+#define COMMANDS_LIST "List of commands:\n-1: end connection\n0: this list\n1: add record\n2: show all records\n5: show mean of salary\n9: clear database\n"
 
 typedef struct connections {
     int port;

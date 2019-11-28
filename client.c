@@ -3,11 +3,15 @@
 #include "requests.h"
 
 void sighup();
-void set_timer(timer_t, int, int);
+void client();
 
 int sock_desc;
 
-int main() {
+int main(int argc, char **argv) {
+    if (argc <= 1)client(1,"\0");
+}
+
+void client(int console, char *file) {
     signal(SIGHUP, sighup);
     sock_desc = connect_socket(61000); //connecting to main server
     if(sock_desc < 0) {
@@ -31,16 +35,17 @@ int main() {
     sock_desc = connect_socket(action);
 
     while(1) {
-        printf("\nInsert command\n");
         int ID,command, age, salary;
-        scanf("%d", &command);
-        printf("\nSending command no.: %d\n", command);
+        if(console) {
+            printf("\nInsert command (0 for help):\n");
+            scanf("%d", &command);
+            printf("\nSending command no.: %d\n", command);
+        }
         send_int(sock_desc, command);
         switch (command) {
 
             case ADD_RECORD:
-                printf("Sending record\n");
-                add_record(sock_desc, 98556, 30, 500);
+                if (console) add_record_console(sock_desc);
             break;
 
             case SHOW_ALL:
@@ -51,6 +56,13 @@ int main() {
             case MEAN:
                 printf("Mean is: %d \n", receive_int(sock_desc));
             break;
+
+            case CLEAR_DATABASE:
+                printf("Database was cleared!\n");
+            break;
+
+            case MENU:
+                printf(COMMANDS_LIST);
         }
         command = receive_int(sock_desc);
         printf("received %d\n", command);
@@ -68,11 +80,3 @@ void sighup() {
     exit(0);
 }
 
-void set_timer(timer_t timer, int sec, int interval) {
-    struct itimerspec my_timer;
-    my_timer.it_value.tv_sec = sec; //first signal
-    my_timer.it_value.tv_nsec = sec;
-    my_timer.it_interval.tv_sec = sec; //periodical
-    my_timer.it_interval.tv_sec = sec;
-    timer_settime(timer, CLOCK_REALTIME,&my_timer, NULL);
-}

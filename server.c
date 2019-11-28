@@ -149,7 +149,13 @@ void processing(int my_socket) { //function to fulfill client tasks
             records[records_number].age = receive_int(act_sock_desc);
             records[records_number].salary = receive_int(act_sock_desc);
 
-            
+            if (records_number >= (MAX_RECORDS - 1)) {
+                #ifdef DEUG
+                printf("Database is full!\n");
+                #endif
+                send_int(act_sock_desc, 0);
+                break;
+            }
             if(records[records_number].ID >= 0 && records[records_number].age >= 0 && records[records_number].salary >= 0) {
                 #ifdef DEBUG
                 printf("New record is: ID: %d, age: %d, salary: %d\n",records[records_number].ID, records[records_number].age, records[records_number].salary);
@@ -185,6 +191,11 @@ void processing(int my_socket) { //function to fulfill client tasks
             printf("Ending connection on process no.: %d!\n", getpid());
             #endif
             sigint_cli();
+        break;
+
+        case CLEAR_DATABASE:
+            records_number = 0;
+            send_int(act_sock_desc, 1);
         break;
 
         default:
