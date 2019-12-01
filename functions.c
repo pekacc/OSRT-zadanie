@@ -102,7 +102,7 @@ int receive_int(int sock_desc) {
     int i;
     int k = recv(sock_desc,&i,sizeof(int),0);
     if(k <= 0) { //bad received format
-        printf("Receiving error! k = %d\n", k);
+        //printf("Receiving error! k = %d\n", k);
         return -1;
     }
     return i;

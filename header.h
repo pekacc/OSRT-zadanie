@@ -22,8 +22,9 @@
 #define RECEIVE_BUF 100
 #define MAX_CONNECTIONS 10
 #define MIN_PORT_NUMBER 60000 //sockets creating from this port number
+#define MAIN_SOCKET 61000
 #define MAX_RECORDS 1000
-#define DEBUG
+//#define DEBUG
 //#define CLIENT_DEBUG
 #define CLIENT_TIMEOUT 60
 
@@ -33,9 +34,11 @@
 #define ADD_RECORD 1
 #define SHOW_ALL 2
 #define MEAN 5
+#define MAX_VALUE 6
+#define MIN_VALUE 7
 #define CLEAR_DATABASE 9
 
-#define COMMANDS_LIST "List of commands:\n-1: end connection\n0: this list\n1: add record\n2: show all records\n5: show mean of salary\n9: clear database\n"
+#define COMMANDS_LIST "List of commands:\n-1: end connection\n0: this list\n1: add record\n2: show all records\n5: show mean of salary\n6: show record with maximal salary\n7: show record with minimal salary\n9: clear database\n"
 
 typedef struct connections {
     int port;

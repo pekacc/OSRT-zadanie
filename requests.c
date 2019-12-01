@@ -51,3 +51,11 @@ void show_all(int sock_desc) {
         printf("Record no. %d has ID %d, age %d and salary %d\n", i, ID, age, salary);
     }
 }
+
+void show_single_record(int sock_desc) {
+        int ID,age,salary;
+        ID = receive_int(sock_desc);
+        age = receive_int(sock_desc);
+        salary = receive_int(sock_desc);
+        printf("ID: %d, age: %d salary: %d\n", ID, age, salary);
+}

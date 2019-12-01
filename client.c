@@ -3,6 +3,7 @@
 #include "requests.h"
 
 void sighup();
+void sighup_console();
 void client();
 
 int sock_desc;
@@ -12,7 +13,7 @@ int main(int argc, char **argv) {
     if (argc <= 1)client(1, "\0");
     else {
         int num = *argv[1] - '0';
-        if(num < 1 || num > 9 ) {
+        if(num < 1 || num > 4 ) {
             printf("Bad argument!\n");
             return -1;
         }
@@ -21,17 +22,25 @@ int main(int argc, char **argv) {
             char file[] = "client__";
             file[6] = i + '0';
             file[7] = '\0';
+            #ifdef CLIENT_DEBUG
             printf("File is: %s\n", file);
-
-            if(fork() == 0) client(0, file); 
+            #endif
+            if(fork() == 0) client(0, file); //creating bot client
         }
-        client(1, "\0");
+        client(1, "\0"); //console client
     }
 }
 
 void client(int console, char *file) {
-    signal(SIGHUP, sighup);
-    sock_desc = connect_socket(61000); //connecting to main server
+    if(console) {
+        signal(SIGHUP, sighup_console);
+        signal(SIGINT, sighup_console);
+    } else {
+        signal(SIGHUP, sighup);
+        signal(SIGINT, sighup);
+    }
+
+    sock_desc = connect_socket(MAIN_SOCKET); //connecting to main server
     if(sock_desc < 0) {
         printf("Cannot connect to server!\n");
         close(sock_desc);
@@ -94,6 +103,16 @@ void client(int console, char *file) {
                 printf("Mean is: %d \n", receive_int(sock_desc));
             break;
 
+            case MAX_VALUE:
+                printf("Record with maximal salary: ");
+                show_single_record(sock_desc);
+            break;
+
+            case MIN_VALUE:
+                printf("Record with minimal salary: ");
+                show_single_record(sock_desc);
+            break;
+
             case CLEAR_DATABASE:
                 printf("Database was cleared!\n");
             break;
@@ -103,7 +122,10 @@ void client(int console, char *file) {
         }
         command = receive_int(sock_desc);
         printf("received %d\n", command);
-        if (command == -1) sighup();
+        if (command == -1) {
+            if (console) sighup_console();
+            else sighup();
+        }
         
     }
 }
@@ -114,7 +136,15 @@ void sighup() {
     printf("Closing client\n");
     #endif
     close(sock_desc);
-    //fclose(input);
+    fclose(input);
     exit(0);
 }
 
+void sighup_console() {
+    signal(SIGHUP, sighup_console);
+    #ifdef DEBUG
+    printf("Closing client\n");
+    #endif
+    close(sock_desc);
+    exit(0);
+}

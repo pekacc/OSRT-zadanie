@@ -65,7 +65,7 @@ int main() {
  
     //creating socket
     printf("Creating socket    ");
-    sock_desc = open_socket(61000);
+    sock_desc = open_socket(MAIN_SOCKET);
     if(sock_desc < 0) {
         printf("\033[1;31m[ERROR]\033[0m\n");
         sigint();
@@ -129,7 +129,7 @@ void processing(int my_socket) { //function to fulfill client tasks
     timer = create_my_timer(SIGUSR1);
     set_my_timer(timer,CLIENT_TIMEOUT,CLIENT_TIMEOUT);
 
-    int action;
+    int action, min, max, index;
     client_action = 0;
 
     while(1) {
@@ -180,6 +180,31 @@ void processing(int my_socket) { //function to fulfill client tasks
         case MEAN:
             send_int(act_sock_desc, mean(records));
             send_int(act_sock_desc, 1);
+        break;
+
+        case MAX_VALUE: ;
+            max = max_value(records, &index);
+            if(max != -1) {
+                send_int(act_sock_desc, records[index].ID);
+                send_int(act_sock_desc, records[index].age);
+                send_int(act_sock_desc, records[index].salary);
+                send_int(act_sock_desc,1);
+            } else {
+                send_int(act_sock_desc, max);
+            }
+            
+        break;
+
+        case MIN_VALUE: ;
+            min = min_value(records, &index);
+            if(min != -1) {
+                send_int(act_sock_desc, records[index].ID);
+                send_int(act_sock_desc, records[index].age);
+                send_int(act_sock_desc, records[index].salary);
+                send_int(act_sock_desc,1);
+            } else {
+                send_int(act_sock_desc, max);
+            }
         break;
 
         case END_CONNECTION: 

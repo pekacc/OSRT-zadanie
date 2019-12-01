@@ -4,7 +4,7 @@ ccgreen = @echo -n "\033[0;32m"
 ccstand = @echo -n "\033[0m"
 
 
-all: server.o statistic.o functions.o client.o requests.o server.c client.c
+all: server.o statistic.o functions.o client.o requests.o server.c client.c header.h
 	@echo "linking"
 	@$(CC) server.o functions.o statistic.o -o server $(CFLAGS)
 	@$(CC) client.o functions.o statistic.o requests.o -o client $(CFLAGS)
