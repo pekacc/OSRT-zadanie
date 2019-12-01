@@ -6,9 +6,27 @@ void sighup();
 void client();
 
 int sock_desc;
+FILE *input;
 
 int main(int argc, char **argv) {
-    if (argc <= 1)client(1,"\0");
+    if (argc <= 1)client(1, "\0");
+    else {
+        int num = *argv[1] - '0';
+        if(num < 1 || num > 9 ) {
+            printf("Bad argument!\n");
+            return -1;
+        }
+        printf("Argument is: %d\n", num);
+        for (int i = 1; i < num; i++) {
+            char file[] = "client__";
+            file[6] = i + '0';
+            file[7] = '\0';
+            printf("File is: %s\n", file);
+
+            if(fork() == 0) client(0, file); 
+        }
+        client(1, "\0");
+    }
 }
 
 void client(int console, char *file) {
@@ -33,6 +51,15 @@ void client(int console, char *file) {
     sleep(1); //waiting for server fork
     printf("Connecting to new socket\n");
     sock_desc = connect_socket(action);
+    if(!console) {
+        if ((input = fopen(file, "r")) == NULL) {
+            printf("Error in opening file %s\n",file);
+            sighup();
+        }
+        #ifndef CLIENT_DEBUG
+        fclose(stdout);
+        #endif
+    }
 
     while(1) {
         int ID,command, age, salary;
@@ -40,12 +67,22 @@ void client(int console, char *file) {
             printf("\nInsert command (0 for help):\n");
             scanf("%d", &command);
             printf("\nSending command no.: %d\n", command);
+        } else {
+            sleep(3);
+            fscanf(input, "%d", &command);
         }
         send_int(sock_desc, command);
         switch (command) {
 
             case ADD_RECORD:
                 if (console) add_record_console(sock_desc);
+                else {
+                    int id,age, salary;
+                    fscanf(input, "%d", &id);
+                    fscanf(input, "%d", &age);
+                    fscanf(input, "%d", &salary);
+                    add_record(sock_desc, id, age, salary);
+                }
             break;
 
             case SHOW_ALL:
@@ -74,9 +111,10 @@ void client(int console, char *file) {
 void sighup() {
     signal(SIGHUP, sighup);
     #ifdef DEBUG
-    printf("Hang up from server side\n");
+    printf("Closing client\n");
     #endif
     close(sock_desc);
+    //fclose(input);
     exit(0);
 }
 

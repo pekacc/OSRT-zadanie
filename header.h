@@ -24,6 +24,7 @@
 #define MIN_PORT_NUMBER 60000 //sockets creating from this port number
 #define MAX_RECORDS 1000
 #define DEBUG
+//#define CLIENT_DEBUG
 #define CLIENT_TIMEOUT 60
 
 //macros for client tasks
