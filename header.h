@@ -24,6 +24,7 @@
 #define MIN_PORT_NUMBER 60000 //sockets creating from this port number
 #define MAIN_SOCKET 61000
 #define MAX_RECORDS 1000
+#define MAX_BOT_CLIENTS 3 //no more than 9 !!!
 //#define DEBUG
 //#define CLIENT_DEBUG
 #define CLIENT_TIMEOUT 60

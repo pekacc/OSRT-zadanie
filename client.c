@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
     if (argc <= 1)client(1, "\0");
     else {
         int num = *argv[1] - '0';
-        if(num < 1 || num > 4 ) {
+        if(num < 1 || num > (MAX_BOT_CLIENTS + 1) ) {
             printf("Bad argument!\n");
             return -1;
         }
