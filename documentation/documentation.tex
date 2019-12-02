@@ -12,6 +12,8 @@ Program je určený na uchovávanie a spracovanie záznamov o veku a plate.
 
 \section{Požiadavky}
 Program je určený pre OS Linux. Testovaný bol na OS Ubuntu 18.04.3 LTS. 
+\newline
+Zoznam použitých knižníc sa nachádza v súbore header.h.
 
 \section{Kompilácia}
 Kompilácia prebieha cez program make. Stačí do konzoly zadať príkaz make a program sa skompiluje.
@@ -47,9 +49,37 @@ požiadavky, ktoré je stanovené v súbore header.h. Server následne vie, ako 
 spracovaní požiadavky odpovie server, či bola požiadavka správne spracovaná. Ak áno, server pošile
 klientovi 1, ak nie, tak 0.
 
+\subsection{Vnútorná logika servera}
+\subsubsection{Tabuľka spojení}
+V serveri je neustále spustený jeden proces s dvoma vláknami. Jedno vlákno čaká na prichádzajúce
+spojenia a druhé slúži na kontrolné výpisy. Pri pripájaní klientov sa pre každého vytvorí osobitný
+proces. 
+\newline
+Každé spojenie server-klient je uložené v databáze, ktorú má k dospozícii hlavný proces 
+servera. V nej je uložený PID klienta a PID serverového procesu, ktorý klienta obsluhuje. Tabuľka
+slúži najmä pri správnom ukončovaní serveru. Vtedy server ukončí všetky svoje procesy a klientským
+procesom pošle signál SIGHUP, ktorý im signalizuje, že končí komunikácia so serverom. V databáze je
+ošetrené aj to, keď sa klient sám odpojí a tým zanikne spojenie. V takomto prípade daný obslužný
+proces zapíše svoj PID na miesto prístupné hlavnému procesu a ukončí sa. Ukončením dostane hlavný
+(rodičovský) proces signál SIGCHLD a vie, čo má robiť.
+\newline
+\subsubsection{Ukladanie záznamov}
+Záznamy sú uložené v zdieľanej pamäti prístupnej všetkým procesom servera. Na zdieľanú pamäť je 
+vytvorený mutex semafór, ktorý zabraňuje súčasnému prístupu viacerých procesov. Zdieľaná pamäť má
+obmedzenú veľkosť definovanú makrom. Ak sa táto veľkosť dosiahne, nebude možné pridávať ďalšie záznamy, 
+kým sa pamäť nevymaže.
+\subsubsection{Ukončenie spojenia serverom}
+Ak je klient pripojený na server, avšak nekomunikuje aktívne so serverom, server po stanovenom čase
+ukončí komunikáciu. Toto je ošetrené časovačom, ktorý má zadefinovanú periódu makrom. Tento časovač
+každú periódu skontroluje, či prebehla nejaká akcia zo strany klienta. V prípade neaktivity sa obslužný 
+proces ukončí. Samozrejme, dá to vedieť aj klientskému procesu, ktorému zašle signál SIGHUP.
+
+
 \section{Zoznam súborov}
 \subsection{Súbory s kódom (.c)}
-Súbor server.c obsahuje kód serveru. Súbor client.c obsahuje kód klienta.
+Súbor server.c obsahuje kód serveru.
+\newline
+Súbor client.c obsahuje kód klienta.
 \newline
 V súbore functions.c sa nachádzajú funkcie využívané aj serverom, ak klientom. Sú to najmä funkcie na
 prácu so socketmi, zdieľanými pamäťami a časovačmi.
@@ -106,6 +136,25 @@ Funkcia mean zobrazí priemerný plat
 Funkcia max\_value vráti najvyšší plat a ID záznamu
 \newline
 Funkcia min\_value vráti najnižší plat a ID záznamu
+
+\subsection{Súbory server a client}
+V týchto súboroch sa nachádzajú najmä funkcie, ktoré reagujú na signály. Signály sigint, sigquit
+a sighup slúžia na správne ukončenie programov (zatvorenie socketov, odstránenie alokovaných premenných
+a podobne). Špeciálne funkcie sú client a processing. Funkcia client sa spustí v klientskom procese
+a komunikuje so serverom. Funkcia processing sa spustí ako proces servera a obsluhuje klientský proces.
+\newline
+Osobitná funkcia je tiež status\_thread nachádzajúca sa v súbore server. Táto funkcia sa spustí v 
+samostatnom vlákne a slúži na kontrolné a informačné výpisy počas behu servera.
+
+\section{Rozšírenia}
+Program bol písaný tak, aby sa nové funkcionality implementovali čo najjednoduchšie. Dodefinovať 
+akúkoľvek matematickú, respektíve štatistiskú operáciu s množinou záznamov nie je žiaden problém.
+Stačí zadefinovať jeho hodnotu cez makro (nie nutné, ale vrelo odporúčané), vytvoriť požiadavku 
+klienta, spracovanie servera a dané funkcie zavolať v serveri a klientovi.
+\newline
+Počet klientov vpodstate nie je limitovaný (je limitovaný makrom, ktoré sa však dá bez problémov
+zmeniť). Testovaný bol však maximálne pre 10 klientov. Pri vyšších počtoch, rozsiahlej databáze a 
+náročných požiadavkach môže nastať spomalenie z dôvodu čakania na prístup k zdieľanej pamäti.
 
 \section{Stiahnutie}
 Kompletný program si môžete stiahnuť z github-u cez nasledovný link:
