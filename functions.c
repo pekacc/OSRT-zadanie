@@ -166,6 +166,7 @@ void remove_connection(CONNECTIONS *connections, int connections_number, pid_t p
             num = i;
         }
     }
+    kill(connections[num].pid_client, SIGHUP);
     for (int i = num+1; i < connections_number; i++) {
         connections[i-1] = connections[i];
     }
