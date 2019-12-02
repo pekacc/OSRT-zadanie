@@ -19,7 +19,9 @@ int open_socket(int port) {
     server.sin_addr.s_addr = INADDR_ANY;  
     server.sin_port = htons(port);  
     if (bind(sock_desc, (struct sockaddr*)&server, sizeof(server)) != 0) {
+        #ifdef DEBUG
         printf("cannot bind socket!\n");
+        #endif
         close(sock_desc);  
         return -1;
     }
